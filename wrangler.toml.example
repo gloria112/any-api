@@ -1,0 +1,27 @@
+name = "any-api-gateway"
+main = "src/workers.ts"
+compatibility_date = "2025-12-24"
+workers_dev = true
+preview_urls = true
+
+# Optional: Custom domain routing (uncomment and modify)
+# [[routes]]
+# pattern = "your-domain.com/v1/*"
+# zone_name = "your-domain.com"
+
+[vars]
+# 推荐：使用单一 JSONC 配置（ANY_API_CONFIG）描述所有 provider/model。
+# 模型 ID 必须使用 `provider.modelName`（不提供默认模型/默认 provider）。
+ANY_API_CONFIG = "{\"version\":1,\"providers\":{\"openai-provider\":{\"type\":\"openai-responses\",\"baseURL\":\"https://your-relay-server.example/openai\",\"apiKey\":\"REPLACE_ME\",\"quirks\":{\"noInstructions\":false,\"noPreviousResponseId\":false},\"models\":{\"model-a\":{\"upstreamModel\":\"gpt-5.2\",\"options\":{\"reasoningEffort\":\"high\",\"maxInstructionsChars\":12000}}}},\"gemini-provider\":{\"type\":\"gemini\",\"baseURL\":\"https://generativelanguage.googleapis.com\",\"apiKey\":\"REPLACE_ME\",\"models\":{\"model-b\":{\"upstreamModel\":\"gemini-3-pro-preview\"}}}}}"
+
+# Debug logging (optional)
+# ANY_API_DEBUG = "true" # set "false"/"0" to disable
+
+# Secrets (do not commit to git, use wrangler secret put):
+#   wrangler secret put WORKER_AUTH_KEY
+# Optional: multiple client auth keys (comma-separated):
+#   wrangler secret put WORKER_AUTH_KEYS
+
+
+[observability]
+enabled = true

@@ -1,0 +1,21 @@
+#
+# Copy to `.dev.vars` for local development:
+#   cp .dev.vars.example .dev.vars
+#
+# Wrangler will load these when you run `wrangler dev`.
+#
+# NOTE: `.dev.vars` is ignored by git. Do NOT commit real secrets.
+#
+
+# Config-driven gateway (required)
+# - 模型 ID 必须使用 `provider.modelName`（不提供默认模型/默认 provider）
+# - provider 的密钥可以直接写到 config（本文件是示例；真实密钥只放你本地 `.dev.vars` 或线上 wrangler secrets）
+ANY_API_CONFIG={"version":1,"providers":{"gbro-codex":{"type":"openai-responses","baseURL":"https://your-relay-server.example/openai","apiKey":"REPLACE_ME","quirks":{"noInstructions":false,"noPreviousResponseId":false},"models":{"gpt-5.2":{"upstreamModel":"gpt-5.2","options":{"reasoningEffort":"high","maxInstructionsChars":12000}}}},"google-gemini":{"type":"gemini","baseURL":"https://generativelanguage.googleapis.com","apiKey":"REPLACE_ME","models":{"gemini-3-pro-preview":{"upstreamModel":"gemini-3-pro-preview"}}}}}
+
+# Debug logging
+# ANY_API_DEBUG=true
+
+# For local dev only you can put secrets here:
+# WORKER_AUTH_KEY=your-worker-auth-key   # or WORKER_AUTH_KEYS=key1,key2
+# Optional: multiple client auth keys (comma-separated)
+# WORKER_AUTH_KEYS=key1,key2,key3
