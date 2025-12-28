@@ -12,7 +12,40 @@ preview_urls = true
 [vars]
 # 推荐：使用单一 JSONC 配置（ANY_API_CONFIG）描述所有 provider/model。
 # 模型 ID 必须使用 `provider.modelName`（不提供默认模型/默认 provider）。
-ANY_API_CONFIG = "{\"version\":1,\"providers\":{\"openai-provider\":{\"type\":\"openai-responses\",\"baseURL\":\"https://your-relay-server.example/openai\",\"apiKey\":\"REPLACE_ME\",\"quirks\":{\"noInstructions\":false,\"noPreviousResponseId\":false},\"models\":{\"model-a\":{\"upstreamModel\":\"gpt-5.2\",\"options\":{\"reasoningEffort\":\"high\",\"maxInstructionsChars\":12000}}}},\"gemini-provider\":{\"type\":\"gemini\",\"baseURL\":\"https://generativelanguage.googleapis.com\",\"apiKey\":\"REPLACE_ME\",\"models\":{\"model-b\":{\"upstreamModel\":\"gemini-3-pro-preview\"}}}}}"
+# 在 wrangler.toml 里可以用 TOML 的多行字符串（推荐），可读性更好：
+ANY_API_CONFIG = '''
+{
+  "version": 1,
+  "providers": {
+    "openai-provider": {
+      "type": "openai-responses",
+      "baseURL": "https://your-relay-server.example/openai",
+      "apiKey": "REPLACE_ME",
+      "quirks": {
+        "noInstructions": false,
+        "noPreviousResponseId": false
+      },
+      "models": {
+        "model-a": {
+          "upstreamModel": "gpt-5.2",
+          "options": {
+            "reasoningEffort": "high",
+            "maxInstructionsChars": 12000
+          }
+        }
+      }
+    },
+    "gemini-provider": {
+      "type": "gemini",
+      "baseURL": "https://generativelanguage.googleapis.com",
+      "apiKey": "REPLACE_ME",
+      "models": {
+        "model-b": { "upstreamModel": "gemini-3-pro-preview" }
+      }
+    }
+  }
+}
+'''
 
 # Debug logging (optional)
 # ANY_API_DEBUG = "true" # set "false"/"0" to disable
