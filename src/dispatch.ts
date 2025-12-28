@@ -3,7 +3,7 @@ import type { Env, GatewayConfig, ModelConfig, ProviderConfig } from "./config";
 import { getProviderApiKey } from "./config";
 import { handleClaudeChatCompletions } from "./providers/claude";
 import { handleGeminiChatCompletions } from "./providers/gemini";
-import { handleOpenAIRequest } from "./providers/openai";
+import { handleOpenAIChatCompletionsUpstream, handleOpenAIRequest } from "./providers/openai";
 
 function joinUrls(urls: unknown): string {
   const list = Array.isArray(urls) ? urls.map((u) => String(u ?? "").trim()).filter(Boolean) : [];
@@ -97,6 +97,39 @@ export async function dispatchOpenAIChatToProvider({
       path: typeof path === "string" ? path : "",
       startedAt: typeof startedAt === "number" && Number.isFinite(startedAt) ? startedAt : Date.now(),
       isTextCompletions: false,
+      extraSystemText: "",
+    });
+  }
+
+  if (providerType === "openai-chat-completions") {
+    const providerOpts = provider?.options || {};
+    const modelOpts = model?.options || {};
+    const chatCompletionsPath =
+      (provider.endpoints && typeof (provider.endpoints as any).chatCompletionsPath === "string" && String((provider.endpoints as any).chatCompletionsPath).trim()) ||
+      (provider.endpoints && typeof (provider.endpoints as any).chat_completions_path === "string" && String((provider.endpoints as any).chat_completions_path).trim()) ||
+      "";
+    const maxInstructionsChars = pickNumber(modelOpts.maxInstructionsChars, providerOpts.maxInstructionsChars);
+
+    const env2 = envWithOverrides(env, {
+      OPENAI_BASE_URL: joinUrls(provider.baseURLs),
+      OPENAI_API_KEY: apiKey,
+      ...(chatCompletionsPath ? { OPENAI_CHAT_COMPLETIONS_PATH: chatCompletionsPath } : null),
+      ...(maxInstructionsChars != null ? { RESP_MAX_INSTRUCTIONS_CHARS: String(maxInstructionsChars) } : null),
+    });
+
+    const token = normalizeAuthValue(reqJson?.__client_token || "");
+
+    return await handleOpenAIChatCompletionsUpstream({
+      request,
+      env: env2,
+      reqJson,
+      model: model.upstreamModel,
+      stream,
+      token,
+      debug,
+      reqId,
+      path: typeof path === "string" ? path : "",
+      startedAt: typeof startedAt === "number" && Number.isFinite(startedAt) ? startedAt : Date.now(),
       extraSystemText: "",
     });
   }

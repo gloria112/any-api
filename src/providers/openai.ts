@@ -88,6 +88,70 @@ function buildUpstreamUrls(raw: unknown, responsesPathRaw: unknown): string[] {
   return out;
 }
 
+function buildChatCompletionsUrls(raw: unknown, chatPathRaw: unknown): string[] {
+  const value = typeof raw === "string" ? raw.trim() : "";
+  if (!value) return [];
+
+  const configuredChatPath = typeof chatPathRaw === "string" ? chatPathRaw.trim() : "";
+
+  const parts = value
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const out: string[] = [];
+  const pushUrl = (urlStr: unknown) => {
+    if (!urlStr || typeof urlStr !== "string") return;
+    if (!out.includes(urlStr)) out.push(urlStr);
+  };
+
+  const inferChatPath = (basePath: string) => {
+    const p = (basePath || "").replace(/\/+$/, "");
+    // Avoid /v1/v1/chat/completions for gateways that already map /openai or /v1.
+    if (p.endsWith("/openai") || p.endsWith("/openai/v1")) return "/chat/completions";
+    if (p.endsWith("/v1")) return "/chat/completions";
+    return "/v1/chat/completions";
+  };
+
+  for (const p of parts) {
+    try {
+      const normalized = normalizeBaseUrl(p);
+      const u0 = new URL(normalized);
+      const basePath = (u0.pathname || "").replace(/\/+$/, "") || "/";
+      const isFullEndpoint = basePath.endsWith("/v1/chat/completions") || basePath.endsWith("/chat/completions");
+
+      if (isFullEndpoint) {
+        u0.pathname = basePath;
+        u0.search = "";
+        u0.hash = "";
+        pushUrl(u0.toString());
+        continue;
+      }
+
+      const preferred = configuredChatPath
+        ? configuredChatPath.startsWith("/")
+          ? configuredChatPath
+          : `/${configuredChatPath}`
+        : inferChatPath(basePath);
+      const candidates = configuredChatPath
+        ? [joinPathPrefix(basePath, preferred)]
+        : [joinPathPrefix(basePath, preferred), joinPathPrefix(basePath, "/v1/chat/completions"), joinPathPrefix(basePath, "/chat/completions")];
+
+      for (const path of candidates) {
+        const u = new URL(normalized);
+        u.pathname = path;
+        u.search = "";
+        u.hash = "";
+        pushUrl(u.toString());
+      }
+    } catch {
+      // Ignore invalid URLs; caller will handle empty list.
+    }
+  }
+
+  return out;
+}
+
 function messageContentToResponsesParts(content: any): any[] {
   const out: any[] = [];
 
@@ -1081,7 +1145,7 @@ export async function handleOpenAIRequest({
         status: sel.resp.status,
         contentType: sel.resp.headers.get("content-type") || "",
       });
-    }
+}
 
 	    if (!stream) {
 	      let fullText = "";
@@ -1987,4 +2051,79 @@ export async function handleOpenAIRequest({
 
   if (debug) logDebug(debug, reqId, "request done", { elapsedMs: Date.now() - startedAt });
   return new Response(readable, { status: 200, headers: sseHeaders() });
+}
+
+export async function handleOpenAIChatCompletionsUpstream({
+  request,
+  env,
+  reqJson,
+  model,
+  stream,
+  token,
+  debug,
+  reqId,
+  path,
+  startedAt,
+  extraSystemText,
+}: {
+  request: Request;
+  env: Env;
+  reqJson: any;
+  model: string;
+  stream: boolean;
+  token: string;
+  debug: boolean;
+  reqId: string;
+  path: string;
+  startedAt: number;
+  extraSystemText: string;
+}): Promise<Response> {
+  const upstreamBase = normalizeAuthValue((env as any)?.OPENAI_BASE_URL);
+  if (!upstreamBase) return jsonResponse(500, jsonError("Server misconfigured: missing OPENAI_BASE_URL", "server_error"));
+  const upstreamKey = normalizeAuthValue((env as any)?.OPENAI_API_KEY);
+  if (!upstreamKey) return jsonResponse(500, jsonError("Server misconfigured: missing OPENAI_API_KEY", "server_error"));
+
+  const upstreamUrls = buildChatCompletionsUrls(upstreamBase, (env as any)?.OPENAI_CHAT_COMPLETIONS_PATH);
+  if (!upstreamUrls.length) return jsonResponse(500, jsonError("Server misconfigured: invalid OPENAI_BASE_URL", "server_error"));
+  if (debug) logDebug(debug, reqId, "openai chat-completions upstream urls", { urls: upstreamUrls });
+
+  const body: Record<string, any> = { ...(reqJson && typeof reqJson === "object" ? reqJson : {}) };
+  body.model = model;
+  body.stream = Boolean(stream);
+  for (const k of Object.keys(body)) {
+    if (k.startsWith("__")) delete body[k];
+  }
+
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+    accept: stream ? "text/event-stream" : "application/json",
+    authorization: `Bearer ${upstreamKey}`,
+    "x-api-key": upstreamKey,
+    "x-goog-api-key": upstreamKey,
+  };
+  if (debug) logDebug(debug, reqId, "openai chat-completions upstream headers", { headers: redactHeadersForLog(headers) });
+
+  if (extraSystemText && Array.isArray(body.messages)) {
+    body.messages = [{ role: "system", content: extraSystemText }, ...body.messages];
+  }
+
+  void token;
+  void request;
+  void path;
+  void startedAt;
+
+  const sel = await selectUpstreamResponseAny(upstreamUrls, headers, [body], debug, reqId, []);
+  if (!sel.ok && debug) {
+    logDebug(debug, reqId, "openai chat-completions upstream failed", { path, upstreamUrl: sel.upstreamUrl, status: sel.status, error: sel.error });
+  }
+  if (!sel.ok) return jsonResponse(sel.status, sel.error);
+
+  const resp = sel.resp;
+  if (stream) {
+    return new Response(resp.body, { status: resp.status, headers: sseHeaders() });
+  }
+
+  const text = await resp.text();
+  const outHeaders: Record<string, string> = { "content-type": resp.headers.get("content-type") || "application/json; charset=utf-8" };
+  return new Response(text, { status: resp.status, headers: outHeaders });
 }

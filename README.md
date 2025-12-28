@@ -89,6 +89,7 @@ Right.codes（上游为 OpenAI Responses；部分能力不支持 `instructions` 
 
 常用 provider type：
 - `openai-responses`：上游走 Responses API（支持 reasoning、tool calling、SSE 等）
+- `openai-chat-completions`：上游走 Chat Completions API（`/v1/chat/completions`）
 - `gemini`：上游走 Gemini `generateContent` / `streamGenerateContent`
 - `claude`：上游走 Claude `/v1/messages`（当你把 OpenAI Chat 路由到 Claude provider 时使用）
 
