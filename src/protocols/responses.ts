@@ -37,7 +37,9 @@ export function responsesRequestToOpenAIChat(reqJson: unknown): Record<string, u
   const input = body.input;
 
   const messages: Array<{ role: string; content: unknown }> = [];
-  if (instructions && instructions.trim()) messages.push({ role: "system", content: instructions.trim() });
+  // Normalize Responses `instructions` into Chat "developer" (newer convention).
+  // Historically this was "system"; accept old clients elsewhere by mapping system->developer.
+  if (instructions && instructions.trim()) messages.push({ role: "developer", content: instructions.trim() });
 
   if (typeof input === "string") {
     if (input.trim()) messages.push({ role: "user", content: input });
@@ -45,7 +47,8 @@ export function responsesRequestToOpenAIChat(reqJson: unknown): Record<string, u
     for (const item of input) {
       if (!item || typeof item !== "object") continue;
       const itemObj = item as Record<string, unknown>;
-      const role = itemObj.role === "assistant" ? "assistant" : itemObj.role === "system" ? "system" : "user";
+      const role =
+        itemObj.role === "assistant" ? "assistant" : itemObj.role === "developer" || itemObj.role === "system" ? "developer" : "user";
       const content = Array.isArray(itemObj.content) ? partsToOpenAiContent(itemObj.content) : normalizeMessageContent(itemObj.content);
       messages.push({ role, content });
     }

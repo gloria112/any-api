@@ -473,7 +473,7 @@ function responsesReqVariants(responsesReq: any, stream: unknown): any[] {
   if (typeof instructions === "string" && instructions.trim() && Array.isArray(input)) {
     const v = { ...base };
     delete v.instructions;
-    v.input = [{ role: "system", content: [{ type: "input_text", text: instructions }] }, ...input];
+    v.input = [{ role: "developer", content: [{ type: "input_text", text: instructions }] }, ...input];
     variants.push(v);
     if (Number.isInteger(maxOutput)) {
       const v2 = { ...v };
@@ -500,7 +500,7 @@ function responsesReqVariants(responsesReq: any, stream: unknown): any[] {
     if (typeof instructions === "string" && instructions.trim()) {
       const v2 = { ...v };
       delete v2.instructions;
-      v2.input = [{ role: "system", content: instructions }, ...stringInput];
+      v2.input = [{ role: "developer", content: instructions }, ...stringInput];
       variants.push(v2);
     }
   }
