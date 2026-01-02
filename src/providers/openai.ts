@@ -431,6 +431,12 @@ function responsesReqToPrompt(responsesReq: any): string {
 function responsesReqVariants(responsesReq: any, stream: unknown): any[] {
   const variants: any[] = [];
   const base = { ...responsesReq, stream: Boolean(stream) };
+  // Responses API accepts `input` as either a string or an array. Normalize string input into
+  // the structured array form to make downstream compatibility variants consistent.
+  if (typeof base.input === "string") {
+    const text = base.input;
+    base.input = [{ role: "user", content: [{ type: "input_text", text }] }];
+  }
   variants.push(base);
 
   const maxOutput = base.max_output_tokens;
@@ -574,6 +580,44 @@ function responsesReqVariants(responsesReq: any, stream: unknown): any[] {
     deduped.push(v);
   }
   return deduped;
+}
+
+function moveInstructionsToDeveloperInput(v: any): any {
+  if (!v || typeof v !== "object") return v;
+  const instr = typeof v.instructions === "string" ? v.instructions.trim() : "";
+  if (!instr) return v;
+
+  const out: any = { ...v };
+  delete out.instructions;
+
+  const input = out.input;
+  if (Array.isArray(input)) {
+    const first = input[0];
+    const wantsStringContent = first && typeof first === "object" && typeof first.content === "string";
+    const developerItem = wantsStringContent
+      ? { role: "developer", content: instr }
+      : { role: "developer", content: [{ type: "input_text", text: instr }] };
+    out.input = [developerItem, ...input];
+    return out;
+  }
+
+  if (typeof input === "string") {
+    out.input = [
+      { role: "developer", content: [{ type: "input_text", text: instr }] },
+      { role: "user", content: [{ type: "input_text", text: input }] },
+    ];
+    return out;
+  }
+
+  out.input = [{ role: "developer", content: [{ type: "input_text", text: instr }] }];
+  return out;
+}
+
+function rewriteVariantsNoInstructions(variants: any[]): any[] {
+  const list = Array.isArray(variants) ? variants : [];
+  // When a gateway doesn't accept top-level `instructions`, still preserve it by moving into `input`
+  // as a `developer` message (closest analogue to "instructions" semantics).
+  return list.map((v) => moveInstructionsToDeveloperInput(v));
 }
 
 function extractOutputTextFromResponsesResponse(response: any): string {
@@ -927,7 +971,7 @@ async function selectUpstreamResponseAny(
   for (const url of urls) {
     if (debug) logDebug(debug, reqId, "openai upstream try", { url });
     const omitInstructions = shouldOmitInstructionsForUpstreamUrl(url, noInstructionsUrlPrefixes);
-    const variantsForUrl = omitInstructions ? filterVariantsOmitInstructions(variants) : variants;
+    const variantsForUrl = omitInstructions ? rewriteVariantsNoInstructions(variants) : variants;
     if (debug && omitInstructions) {
       logDebug(debug, reqId, "openai upstream omitting instructions", {
         url,
